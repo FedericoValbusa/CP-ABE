@@ -1,11 +1,14 @@
 import java.math.BigInteger;
-
+import java.security.SecureRandom;
+import java.util.Random;
+import it.unisa.dia.gas.jpbc.*;
+import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 import javax.swing.text.html.parser.Element;
-
 import it.unisa.*;
 import it.unisa.dia.gas.jpbc.Field;
 import it.unisa.dia.gas.jpbc.Pairing;
-import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
+
+
 public class App {
 
     MPubK pubKey;
@@ -14,13 +17,26 @@ public class App {
     //dire alle altre che usiamo solo la curva con embedding degree 12
     //bisogna anche portare tutta la cartella jpbc dentro al progetto
     public void Setup(){
-        //PairingFactory.getInstance().setUsePBCWhenPossible(true); //per usare PBC wrapper e aumentare le performance
-        this.pairing = PairingFactory.getPairing("a_181_603.properties");
-        Field G1 = pairing.getG1();
-        Field GT = pairing.getGT();
-
-
-        
+         // numero di attributi possibili
+         int n = 3;
+         // Inizializza il pairing con una curva ellittica
+         Pairing pairing = PairingFactory.getPairing("a_181_603.properties"); //abbiamo messo il file nella cartella 
+         Field G1 = pairing.getG1();
+         Field GT = pairing.getGT();
+         BigInteger order_G1 = G1.getOrder();
+         System.out.println("ordine della curva G1: " + (order_G1));
+         System.out.println("ordine della curva GT: " + (GT.getOrder()));
+         //generatore di G1 e quindi G2
+         it.unisa.dia.gas.jpbc.Element g = G1.newRandomElement();
+         while (g.isOne()) {
+            g = G1.newRandomElement();
+            //System.out.println("while" + g);
+         }
+         BigInteger[] t = new BigInteger[n];
+         for (int i = 0; i < n; i++) {
+            Random rand = new SecureRandom();
+            //t[i] = rand.nextInt(order_G1.subtract(new BigInteger(2)))+1;
+         }
     }
 
 
