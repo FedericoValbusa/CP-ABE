@@ -1,10 +1,8 @@
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Random;
-import it.unisa.dia.gas.jpbc.*;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
-import javax.swing.text.html.parser.Element;
-import it.unisa.*;
+import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Field;
 import it.unisa.dia.gas.jpbc.Pairing;
 
@@ -12,35 +10,68 @@ import it.unisa.dia.gas.jpbc.Pairing;
 public class App {
 
     MPubK pubKey;
-    Pairing pairing; 
+    MSecK secKey;
+    Pairing pairing;
+    long order_G1;
+    Element g; 
+    long alpha;
+    long[] t;
+    // numero di attributi possibili
+    int n = 3;
 
-    //dire alle altre che usiamo solo la curva con embedding degree 12
-    //bisogna anche portare tutta la cartella jpbc dentro al progetto
     public void Setup(){
-         // numero di attributi possibili
-         int n = 3;
-         // Inizializza il pairing con una curva ellittica
-         Pairing pairing = PairingFactory.getPairing("a_181_603.properties"); //abbiamo messo il file nella cartella 
-         Field G1 = pairing.getG1();
-         Field GT = pairing.getGT();
-         BigInteger order_G1 = G1.getOrder();
-         System.out.println("ordine della curva G1: " + (order_G1));
-         System.out.println("ordine della curva GT: " + (GT.getOrder()));
-         //generatore di G1 e quindi G2
-         it.unisa.dia.gas.jpbc.Element g = G1.newRandomElement();
-         while (g.isOne()) {
-            g = G1.newRandomElement();
-            //System.out.println("while" + g);
-         }
-         BigInteger[] t = new BigInteger[n];
-         for (int i = 0; i < n; i++) {
-            Random rand = new SecureRandom();
-            //t[i] = rand.nextInt(order_G1.subtract(new BigInteger(2)))+1;
-         }
+        // Inizializza il pairing con una curva ellittica
+        Pairing pairing = PairingFactory.getPairing("a_181_603.properties"); //abbiamo messo il file nella cartella 
+        Field G1 = pairing.getG1();
+        Field GT = pairing.getGT();
+        order_G1 = G1.getOrder().longValue();
+        System.out.println("ordine della curva G1: " + (order_G1));
+        System.out.println("ordine della curva GT: " + (GT.getOrder()));
+        //generatore di G1 e quindi G2
+        g = G1.newRandomElement();
+        while (g.isOne()) {
+           g = G1.newRandomElement();
+           //System.out.println("while" + g);
+        }
+        t = new long[n];
+        it.unisa.dia.gas.jpbc.Element[] T = new it.unisa.dia.gas.jpbc.Element[n]; 
+        Random rand = new SecureRandom();
+        for (int i = 0; i < n; i++) {
+           t[i] = rand.nextLong(order_G1 - 2) + 1;
+           T[i] = g.pow(new BigInteger(String.valueOf(t[i])));
+        }
+        alpha = rand.nextLong(order_G1 - 2) + 1;
+        it.unisa.dia.gas.jpbc.Element y1 = pairing.pairing(g, g);
+        it.unisa.dia.gas.jpbc.Element y = y1.pow(new BigInteger(String.valueOf(alpha)));
+        //quindi possiamo generare chiave pubblica e chiave privata
+        pubKey.generator = g;
+        pubKey.list = T;
+        pubKey.y = y;
+        pubKey.pairing = pairing;
+        //e anche la chiave privata 
+        secKey.alpha = alpha;
+        secKey.t = t;
     }
 
 
-
+    public secK KeyGen(MPubK m_pub_k, MSecK m_sec_k, boolean[] attributes){
+        Random rand = new SecureRandom();
+        long r = rand.nextLong(order_G1 - 2) + 1;
+        Element d0 = g.pow(new BigInteger(String.valueOf(alpha - r)));
+        int listLength = attributes.length;
+        Element[] individualList = new Element[listLength];
+        
+        int j=0;
+        for (int i=0; i<n; i++){
+            if(attributes[i]){
+                BigInteger expR = new BigInteger(String.valueOf(r));
+                BigInteger expT = new BigInteger(String.valueOf(t[i]));
+                individualList[j] = g.pow(expR.multiply(expT.modInverse(new BigInteger(String.valueOf(order_G1)))));
+                j++;
+            }
+        }
+        return new secK(d0, individualList);    
+    }
 
 
     //a is symm
