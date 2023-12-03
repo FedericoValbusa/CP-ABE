@@ -3,9 +3,9 @@ import it.unisa.dia.gas.jpbc.Pairing;
 
 public class MPubK {
     public Pairing pairing;
-    public it.unisa.dia.gas.jpbc.Element generator;
-    public it.unisa.dia.gas.jpbc.Element y;
-    public it.unisa.dia.gas.jpbc.Element[] list;
+    public Element generator;
+    public Element y;
+    public Element[] list;
     
     public MPubK(Pairing p, it.unisa.dia.gas.jpbc.Element g, it.unisa.dia.gas.jpbc.Element y2, it.unisa.dia.gas.jpbc.Element[] l){
         this.pairing=p;
